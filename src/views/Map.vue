@@ -1,13 +1,15 @@
 <template>
   <div class="map-container">
     <div id="map" />
+
+    <button class="rotate" @click="rotateMap">❂</button>
   </div>
 </template>
 
 <script>
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import "@/js/leaflet-rotate-src.js";
+import L from "leaflet-rotate-map";
+// import "@/js/leaflet-rotate-src.js";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -18,7 +20,11 @@ L.Icon.Default.mergeOptions({
 
 export default {
   data() {
-    return {};
+    return {
+      map: null,
+      newPos: null,
+      mapBearing: 45,
+    };
   },
   mounted() {
     var polylinePoints = [
@@ -38,48 +44,80 @@ export default {
       [19.76896518881589, -101.15798950195312],
     ];
 
-    const map = L.map("map", {
-      center: [19.69658457421901, -101.19316002784888],
+    this.map = L.map("map", {
+      center: [19.704218702636343, -101.1926013963573],
       maxBounds: [
-        [20.53903525924762, -102.71705180775498],
-        [17.70576149807073, -98.73488640277418],
+        [22.980604138711705, -103.68520846683836],
+        [18.156685376300572, -98.38079424340377],
       ],
       bounds: [
-        [20.53903525924762, -102.71705180775498],
-        [17.70576149807073, -98.73488640277418],
+        [22.980604138711705, -103.68520846683836],
+        [18.156685376300572, -98.38079424340377],
       ],
       maxBoundsViscocity: 1,
       maxZoom: 14,
-      minZoom: 9,
+      minZoom: 8.5,
       rotate: true,
-      touchRotate: true,
-      rotateControl: {
-        closeOnZeroBearing: false,
-      },
-    }).setView([19.69658457421901, -101.19316002784888], 9);
+    }).setView([19.704218702636343, -101.1926013963573], 8.5);
 
     L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png", {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       noWrap: true,
       maxZoom: 14,
-      tileSize: 256,
-    }).addTo(map);
+    }).addTo(this.map);
+
+    this.map.on("click", this.clickedMap);
+    this.map.setMaxBounds([
+      [21.417046239562346, -102.14021984707564],
+      [18.63753576030064, -100.10603041352888],
+    ]);
+    this.map.on("drag", () => {
+      this.map.panInsideBounds(
+        [
+          [21.417046239562346, -102.14021984707564],
+          [18.63753576030064, -100.10603041352888],
+        ],
+        { animate: false }
+      );
+    });
+
+    var polygon = L.polygon([
+      [21.417046239562346, -102.14021984707564],
+      [21.408830858833856, -100.03976780988722],
+      [18.63753576030064, -100.10603041352888],
+      [18.588145416674287, -102.06489922260593],
+    ]).addTo(this.map);
 
     var marker = L.marker([20.13944895126921, -101.18549416295956])
-      .addTo(map)
+      .addTo(this.map)
       .bindPopup("Moroleon", { autoClose: false, closeOnClick: false, closeButton: false })
       .openPopup();
     var marker2 = L.marker([19.507314766838956, -101.60705193094152])
-      .addTo(map)
+      .addTo(this.map)
       .bindPopup("Patzcuaro", { autoClose: false, closeOnClick: false, closeButton: false })
       .openPopup();
     var marker3 = L.marker([19.780690889637373, -100.65736620776173])
-      .addTo(map)
+      .addTo(this.map)
       .bindPopup("azufres", { autoClose: false, closeOnClick: false, closeButton: false })
       .openPopup();
 
-    var polyline = L.polyline(polylinePoints, { className: "my_polyline" }).addTo(map);
+    var polyline = L.polyline(polylinePoints, { className: "my_polyline" }).addTo(this.map);
+  },
+  methods: {
+    rotateMap() {
+      console.log("Rotate");
+      if (this.mapBearing + 45 > 360) {
+        this.mapBearing = 45;
+      } else {
+        this.mapBearing += 45;
+      }
+      this.map.setBearing(this.mapBearing);
+    },
+    clickedMap(e) {
+      var coord = e.latlng;
+      console.log(coord);
+    },
   },
 };
 </script>
@@ -105,5 +143,20 @@ export default {
     stroke-dasharray: 10, 10;
     stroke-width: 5;
   }
+}
+
+.rotate {
+  position: absolute;
+  background-color: rgb(255, 255, 255);
+  width: 4rem;
+  height: 4rem;
+  border-radius: 4rem;
+  z-index: 1000;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
 }
 </style>
